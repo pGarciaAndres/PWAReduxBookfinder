@@ -6,15 +6,15 @@ const searchService = {
         return res.data;
     },
 
-    async getBookByIsbn(isbn) {
-        let res = await axios.get(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&jscmd=data&format=json`);
-        return res.data;
+    getBookByIsbn(isbn) {
+        let res = axios.get(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&jscmd=data&format=json`);
+        return res;
     },
 
     
-    async getBookByEditionKey(ekey) {
-        let res = await axios.get(`https://openlibrary.org/books/${ekey}.json`);
-        return res.data;
+    getBookByEditionKey(ekey) {
+        let res = axios.get(`https://openlibrary.org/books/${ekey}.json`);
+        return res;
     }
 }
 

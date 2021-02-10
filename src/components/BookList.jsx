@@ -20,21 +20,24 @@ const BookListContainer = styled.div`
     .input {
         width: 100%;
     }
-    .bookCover {
-        width: 100px;
-        min-height: 140px !important;
-        margin-right: 1em;
-        img {
-            width: 100%;
+    .bookContent {
+        display: inline-flex;
+        .bookCover {
+            width: 100px;
+            min-height: 140px !important;
+            margin-right: 1em;
+            img {
+                width: 100%;
+            }
         }
-    }
-    .bookInfo {
-        color: grey;
-        h1 {
-            margin-bottom: 3px;
-        }
-        p.unknown {
-            font-style: italic;
+        .bookInfo {
+            color: grey;
+            h1 {
+                margin-bottom: 3px;
+            }
+            p.unknown {
+                font-style: italic;
+            }
         }
     }
 `;
@@ -53,35 +56,41 @@ const useStyles = makeStyles((theme) => ({
 
 const BookList = props => {
     const classes = useStyles();
-    const [expanded, setExpanded] = useState(false);
+    const [expanded, setExpanded] = useState(null);
     const [bookDetails, setBookDetails] = useState(null);
-    
-    const getAllBookEditions = async(book) => {
-        return Promise.all(book.edition_key.map(i => searchService.getBookByEditionKey(i)));
-    }
+    const [loadingImg, setLoadingImg] = useState(true);
 
     const handleChange = (panel, book) => async(event, isExpanded) => {
-        setExpanded(isExpanded ? panel : false);
         setBookDetails(null);
-        const coverEditionKey = book.cover_edition_key;
-        let bookCover = '';
-        if(coverEditionKey) {
-            const bookCoverEK = coverEditionKey ? await searchService.getBookByEditionKey(coverEditionKey) : '';
-            const bookISBN = await searchService.getBookByIsbn(bookCoverEK.isbn_10);
-            bookCover = bookISBN[`ISBN:${bookCoverEK.isbn_10}`]?.cover?.medium ? bookISBN[`ISBN:${bookCoverEK.isbn_10}`]?.cover?.medium : noCoverImg;
-        } else {
-            bookCover = noCoverImg;
-        }
-        
-        getAllBookEditions(book).then(bookEditions => {
-            setBookDetails({
-                title: book.title,
-                author: book.author_name ? book.author_name[0] : 'Unknown author',
-                cover: bookCover,
-                url: book.edition_key.map((i) => `https://openlibrary.org/books/${i}`),
-                publishDate: bookEditions.map(edition => edition.publish_date)
+        setExpanded(null);
+        if (isExpanded) {
+            const coverEditionKey = book.cover_edition_key ?? '';
+            // si !coverEditionKey, ya sé que la siguiente llamada devolverá un error
+            searchService.getBookByEditionKey(coverEditionKey).then(editionResponse => {
+                const bookCoverEK = editionResponse.data;
+                searchService.getBookByIsbn(bookCoverEK.isbn_10).then(isbnResponse => {
+                    const bookISBN = isbnResponse.data;
+                    const bookCover = bookISBN[`ISBN:${bookCoverEK.isbn_10}`]?.cover?.medium ? bookISBN[`ISBN:${bookCoverEK.isbn_10}`]?.cover?.medium : noCoverImg;
+                    setBookDetails({
+                        title: book.title,
+                        author: book.author_name ? book.author_name[0] : 'Unknown author',
+                        cover: bookCover,
+                        url: book.edition_key.map((i) => `https://openlibrary.org/books/${i}`),
+                    });
+                    setLoadingImg(false);
+                    setExpanded(panel);
+                });
+            }).catch(err => {
+                setBookDetails({
+                    title: book.title,
+                    author: book.author_name ? book.author_name[0] : 'Unknown author',
+                    cover: noCoverImg,
+                    url: book.edition_key.map((i) => `https://openlibrary.org/books/${i}`),
+                });
+                setLoadingImg(false);
+                setExpanded(panel);
             });
-        });
+        }
     };
 
     useEffect(() => {
@@ -100,14 +109,16 @@ const BookList = props => {
 
                     {bookDetails && 
                     <AccordionDetails>
-                        <div className='bookCover'>
-                            <img src={bookDetails.cover} alt={bookDetails.title}/>
-                        </div>
-                        <div className='bookInfo'>
-                            <h1>{bookDetails.title}</h1>
-                            <p className={bookDetails.author === 'Unknown author' ? 'unknown' : ''}>
-                                {bookDetails.author}
-                            </p>
+                        <div className='bookContent'>
+                            <div className='bookCover'>
+                                {!loadingImg && <img src={bookDetails.cover} alt={bookDetails.title}/>}
+                            </div>
+                            <div className='bookInfo'>
+                                <h1>{bookDetails.title}</h1>
+                                <p className={bookDetails.author === 'Unknown author' ? 'unknown' : ''}>
+                                    {bookDetails.author}
+                                </p>
+                            </div>
                         </div>
                     </AccordionDetails>}
                 </Accordion>
