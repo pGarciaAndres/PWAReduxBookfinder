@@ -17,6 +17,12 @@ const SearchContainer = styled.div`
 const SearchBox = props => {
     const [text, setText] = useState('');
 
+    const handleKeyDown = (event) => {
+        if (event.key === 'Enter') {
+            search();
+        }
+    }
+
     const search = () => {
         props.search(text);
     }
@@ -25,9 +31,10 @@ const SearchBox = props => {
         <SearchContainer>
             <Input
                 size='huge'
-                icon={<Icon name='search' link onClick={() => search()}/>}
+                icon={<Icon name='search' link onClick={() => search()} />}
                 placeholder='Search...'
                 onChange={(e) => setText(e.target.value)}
+                onKeyDown={handleKeyDown}
             />
         </SearchContainer>
     )

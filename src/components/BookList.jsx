@@ -19,30 +19,41 @@ const BookListContainer = styled.div`
     }
     .input {
         width: 100%;
+    }  
+`;
+
+const BookContent = styled.div`
+    display: inline-flex;
+`;
+
+const BookCover = styled.div`
+    width: 100px;
+    min-height: 140px !important;
+    margin-right: 1em;
+    img {
+        width: 100%;
     }
-    .bookContent {
-        display: inline-flex;
-        .bookCover {
-            width: 100px;
-            min-height: 140px !important;
-            margin-right: 1em;
-            img {
-                width: 100%;
-            }
-        }
-        .bookInfo {
-            color: grey;
-            h1 {
-                margin-bottom: 3px;
-            }
-            h4 {
-                margin-top: 10px;
-                margin-bottom: 3px;
-            }
-            .italic {
-                font-style: italic;
-            }
-        }
+`;
+
+const BookInfo = styled.div`
+    color: grey;
+    h1 {
+        margin-bottom: 3px;
+    }
+    h4 {
+        margin-top: 10px;
+        margin-bottom: 3px;
+    }
+    .italic {
+        font-style: italic;
+    }
+    .basic {
+        float: left;
+    }
+    .editions {
+        float: right;
+        margin-left: 2em;
+        margin-top: 1em;
     }
 `;
 
@@ -58,11 +69,24 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-let bookCache = {};
-
 const BookList = props => {
     const classes = useStyles();
     const [expanded, setExpanded] = useState(null);
+    const [bookCache, setBookCache] = useState({});
+
+    const getEditions = (books, bookIndex, panel) => {
+        books[bookIndex].editionId.map(async (ed, edIndex) => {
+            const edRes = await searchService.getBookByEditionKey(ed, books, bookIndex, edIndex);
+            const bookEK = edRes.data;
+            const editionTitle = bookEK.title ? bookEK.title : 'Unknown title';
+            const editionDate = bookEK.publish_date ? bookEK.publish_date : 'Unknown date';
+            books[bookIndex].editionName[edIndex] = `${editionTitle} - ${editionDate}`;
+            if (edIndex === books[bookIndex].editionId.length - 1) {
+                setBookCache(books);
+                setExpanded(panel);
+            }
+        });
+    }
 
     const handleChange = (panel, book, index) => async(event, isExpanded) => {
         if (bookCache[index]) {
@@ -82,10 +106,12 @@ const BookList = props => {
                             year: book.first_publish_year,
                             author: book.author_name ? book.author_name[0] : 'Unknown author',
                             place: book.publish_place,
-                            editions: book.edition_key,
+                            editionId: book.edition_key,
+                            editionName: [],
                         }
-                        bookCache[index] = newBook;
-                        setExpanded(panel);
+                        let bookCacheCopy = {...bookCache};
+                        bookCacheCopy[index] = newBook;
+                        getEditions(bookCacheCopy, index, panel);
                     });
                 });
             } else {
@@ -95,16 +121,18 @@ const BookList = props => {
                     year: book.first_publish_year,
                     author: book.author_name ? book.author_name[0] : 'Unknown author',
                     place: book.publish_place,
-                    editions: book.edition_key,
+                    editionId: book.edition_key,
+                    editionName: [],
                 }
-                bookCache[index] = newBook;
-                setExpanded(panel);
+                let bookCacheCopy = {...bookCache};
+                bookCacheCopy[index] = newBook;
+                getEditions(bookCacheCopy, index, panel);
             }
         }
     };
 
     useEffect(() => {
-        bookCache = {};
+        setBookCache({});
         setExpanded(false);
     }, [props.data]);
 
@@ -118,22 +146,32 @@ const BookList = props => {
                     </AccordionSummary>
 
                     {bookCache[i] && expanded && <AccordionDetails>
-                        <div className='bookContent'>
-                            <div className='bookCover'>
+                        <BookContent>
+                            <BookCover>
                                 <img src={bookCache[i].cover} alt={bookCache[i].title}/>
-                            </div>
-                            <div className='bookInfo'>
-                                <h1>{bookCache[i].title} {bookCache[i].year &&`(${bookCache[i].year})`}</h1>
-                                <h4 className={bookCache[i].author === 'Unknown author' ? 'italic' : ''}>
-                                    {bookCache[i].author}
-                                </h4>
-                                <p>{bookCache[i].place &&
-                                    bookCache[i].place.map((item, i) => {
-                                        return <span key={i}>{ (i ? ', ' : '') + item }</span>;
-                                    })}
-                                </p>
-                            </div>
-                        </div>
+                            </BookCover>
+                            <BookInfo>
+                                <div className='basic'>
+                                    <h1>{bookCache[i].title} {bookCache[i].year &&`(${bookCache[i].year})`}</h1>
+                                    <h4 className={bookCache[i].author === 'Unknown author' ? 'italic' : ''}>
+                                        {bookCache[i].author}
+                                    </h4>
+                                    <p>
+                                        {bookCache[i].place &&
+                                        bookCache[i].place.map((item, i) => <span key={i}>{ (i ? ', ' : '') + item }</span> )}
+                                    </p>
+                                </div>
+
+                                <div className='editions'>
+                                    <h4>Editions:</h4>
+                                    {bookCache[i].editionName.map((item, e) =>
+                                        <li key={e}>
+                                            <a href={`https://openlibrary.org/books/${bookCache[i].editionId[e]}`} target="_blank" rel="noreferrer">{item}</a>
+                                        </li>
+                                    )}
+                                </div>
+                            </BookInfo>
+                        </BookContent>
                     </AccordionDetails>}
                 </Accordion>
             )}
