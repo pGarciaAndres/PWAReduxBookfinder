@@ -13,10 +13,8 @@ import searchService from '../services/searchService';
 
 const BookListContainer = styled.div`
     width: 85%;
-    margin: 30px auto 10px auto;
-    @media (max-width: 800px) {
-        margin-top: 10px;
-    }
+    max-width: 1100px;
+    margin: 0px auto 10px auto;
     .input {
         width: 100%;
     }  
@@ -24,6 +22,7 @@ const BookListContainer = styled.div`
 
 const BookContent = styled.div`
     display: inline-flex;
+    width: 100%;
 `;
 
 const BookCover = styled.div`
@@ -37,6 +36,7 @@ const BookCover = styled.div`
 
 const BookInfo = styled.div`
     color: grey;
+    width: 80%;
     h1 {
         margin-bottom: 3px;
     }
@@ -49,15 +49,17 @@ const BookInfo = styled.div`
     }
     .basic {
         float: left;
+        width: 60%;
     }
     .editions {
         float: right;
-        margin-left: 2em;
+        margin-left: 1em;
+        width: 36%;
         margin-top: 1em;
     }
 `;
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
     heading: {
       fontSize: theme.typography.pxToRem(15),
       flexBasis: '33.33%',

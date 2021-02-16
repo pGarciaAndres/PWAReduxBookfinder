@@ -24,7 +24,7 @@ const SearchBox = props => {
     }
 
     const search = () => {
-        props.search(text);
+        props.search(1, text);
     }
 
     return (
@@ -32,7 +32,7 @@ const SearchBox = props => {
             <Input
                 size='huge'
                 icon={<Icon name='search' link onClick={() => search()} />}
-                placeholder='Search...'
+                placeholder='Search for books...'
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={handleKeyDown}
             />

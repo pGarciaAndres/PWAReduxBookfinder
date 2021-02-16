@@ -2,8 +2,9 @@ import axios from 'axios';
 
 const searchService = {
     // General search
-    async getBooksByText(text) {
-        let res = await axios.get(`http://openlibrary.org/search.json?q=${text}&jscmd=details&page=1`);
+    async getBooksByText(page, text) {
+        const p = page ? page : 1;
+        let res = await axios.get(`http://openlibrary.org/search.json?q=${text}&jscmd=details&page=${p}`);
         return res.data;
     },
 
