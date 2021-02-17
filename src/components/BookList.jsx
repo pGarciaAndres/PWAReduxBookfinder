@@ -50,12 +50,25 @@ const BookInfo = styled.div`
     .basic {
         float: left;
         width: 60%;
+        @media (max-width: 700px) {
+            width: 100%;
+            h1 {
+                font-size: 1.3rem;
+            }
+        }
     }
     .editions {
         float: right;
         margin-left: 1em;
         width: 36%;
         margin-top: 1em;
+        
+        @media (max-width: 700px) {
+            float: left;
+            margin-left: 0em;
+            width: auto;
+            margin-top: 0em;
+        }
     }
 `;
 

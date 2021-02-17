@@ -45,17 +45,20 @@ const App = () => {
   const welcomeText = '.BOOK FINDER.';
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState(null);
+  const [searchBy, setSearchBy] = useState(null);
   const [data, setData] = useState({
     docs: [],
     pages: 0,
   });
 
   // Search Book
-  const search = async(page, text) => {
+  const search = async(page, text, by) => {
     setLoading(true);
     const textToFind = text === undefined ? searchText : text;
+    const howToFind = by === undefined ? searchBy : by;
     setSearchText(textToFind);
-    const response = await searchService.getBooksByText(page, textToFind);
+    setSearchBy(howToFind);
+    const response = await searchService.getBooksByInput(page, textToFind, howToFind);
     setData({
       start: response.start,
       docs: response.docs,
