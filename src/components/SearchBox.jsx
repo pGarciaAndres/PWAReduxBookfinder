@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Icon, Input } from 'semantic-ui-react';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import styled from 'styled-components';
+// Redux
+import { useSelector, useDispatch } from "react-redux";
+import { setInputText, setSearchMethod, resetPage } from '../store/actions';
 
 const SearchContainer = styled.div`
     width: 85%;
@@ -24,29 +27,33 @@ const SearchContainer = styled.div`
 `;
 
 const SearchBox = props => {
-    const [text, setText] = useState('');
-    const [searchBy, setSearchBy] = useState('q');
+    const dispatch = useDispatch();
+    const page = useSelector(state => state.page);
 
     const handleKeyDown = (event) => {
         if (event.key === 'Enter') {
-            search();
+            handleSearch();
         }
     }
 
-    const search = () => {
-        props.search(1, text, searchBy);
+    const handleSearch = () => {
+        if (page === 1) {
+            props.search();
+        } else {
+            dispatch(resetPage());
+        }
     }
 
     return (
         <SearchContainer>
             <Input
                 size='huge'
-                icon={<Icon name='search' link onClick={() => search()} />}
+                icon={<Icon name='search' link onClick={() => handleSearch()} />}
                 placeholder='Search for books...'
-                onChange={(e) => setText(e.target.value)}
+                onChange={(e) => dispatch(setInputText(e.target.value))}
                 onKeyDown={handleKeyDown}
             />
-            <RadioGroup row defaultValue="q" onChange={(e) => setSearchBy(e.target.value)}>
+            <RadioGroup row defaultValue="q" onChange={(e) => dispatch(setSearchMethod(e.target.value))}>
                 <FormControlLabel
                     value="q"
                     control={<Radio color="default"/>}

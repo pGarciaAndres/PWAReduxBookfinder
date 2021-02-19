@@ -3,11 +3,13 @@ import styled from 'styled-components';
 import { makeStyles } from '@material-ui/core/styles';
 import Accordion from '@material-ui/core/Accordion';
 import AccordionSummary from '@material-ui/core/AccordionSummary';
-import AccordionDetails from '@material-ui/core/AccordionDetails';
+import BookDetails from './BookDetails.jsx';
 import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import noCoverImg from '../images/noCover.gif';
-
+// Redux
+import { useSelector, useDispatch } from "react-redux";
+import { setCachedBooks, clearCache } from '../store/actions';
 // Services
 import searchService from '../services/searchService';
 
@@ -18,58 +20,6 @@ const BookListContainer = styled.div`
     .input {
         width: 100%;
     }  
-`;
-
-const BookContent = styled.div`
-    display: inline-flex;
-    width: 100%;
-`;
-
-const BookCover = styled.div`
-    width: 100px;
-    min-height: 140px !important;
-    margin-right: 1em;
-    img {
-        width: 100%;
-    }
-`;
-
-const BookInfo = styled.div`
-    color: grey;
-    width: 80%;
-    h1 {
-        margin-bottom: 3px;
-    }
-    h4 {
-        margin-top: 10px;
-        margin-bottom: 3px;
-    }
-    .italic {
-        font-style: italic;
-    }
-    .basic {
-        float: left;
-        width: 60%;
-        @media (max-width: 700px) {
-            width: 100%;
-            h1 {
-                font-size: 1.3rem;
-            }
-        }
-    }
-    .editions {
-        float: right;
-        margin-left: 1em;
-        width: 36%;
-        margin-top: 1em;
-        
-        @media (max-width: 700px) {
-            float: left;
-            margin-left: 0em;
-            width: auto;
-            margin-top: 0em;
-        }
-    }
 `;
 
 const useStyles = makeStyles(theme => ({
@@ -85,9 +35,12 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const BookList = props => {
+    const data = useSelector(state => state.data);
+    const cachedBooks = useSelector(state => state.cachedBooks);
+    
+    const dispatch = useDispatch();
     const classes = useStyles();
-    const [expanded, setExpanded] = useState(null);
-    const [bookCache, setBookCache] = useState({});
+    const [openPanel, setOpenPanel] = useState(null);
 
     const getEditions = (books, bookIndex, panel) => {
         books[bookIndex].editionId.map(async (ed, edIndex) => {
@@ -97,17 +50,17 @@ const BookList = props => {
             const editionDate = bookEK.publish_date ? bookEK.publish_date : 'Unknown date';
             books[bookIndex].editionName[edIndex] = `${editionTitle} - ${editionDate}`;
             if (edIndex === books[bookIndex].editionId.length - 1) {
-                setBookCache(books);
-                setExpanded(panel);
+                dispatch(setCachedBooks(books));
+                setOpenPanel(panel);
             }
         });
     }
 
     const handleChange = (panel, book, index) => async(event, isExpanded) => {
-        if (bookCache[index]) {
-            setExpanded(isExpanded && panel);
+        if (cachedBooks[index]) {
+            setOpenPanel(isExpanded && panel);
         }
-        if (isExpanded && !bookCache[index]) {
+        if (isExpanded && !cachedBooks[index]) {
             const coverEditionKey = book.cover_edition_key ?? '';
             if (coverEditionKey) {
                 searchService.getBookByEditionKey(coverEditionKey).then(editionResponse => {
@@ -124,7 +77,7 @@ const BookList = props => {
                             editionId: book.edition_key,
                             editionName: [],
                         }
-                        let bookCacheCopy = {...bookCache};
+                        let bookCacheCopy = {...cachedBooks};
                         bookCacheCopy[index] = newBook;
                         getEditions(bookCacheCopy, index, panel);
                     });
@@ -139,7 +92,7 @@ const BookList = props => {
                     editionId: book.edition_key,
                     editionName: [],
                 }
-                let bookCacheCopy = {...bookCache};
+                let bookCacheCopy = {...cachedBooks};
                 bookCacheCopy[index] = newBook;
                 getEditions(bookCacheCopy, index, panel);
             }
@@ -147,47 +100,21 @@ const BookList = props => {
     };
 
     useEffect(() => {
-        setBookCache({});
-        setExpanded(false);
-    }, [props.data]);
+        dispatch(clearCache());
+        setOpenPanel(false);
+    }, [data, dispatch]);
 
     return (
         <BookListContainer>
-            {props.data.docs.map((book, i) =>
-                <Accordion key={i} expanded={expanded === `panel${i}`} onChange={handleChange(`panel${i}`, book, i)}>
+            {data.docs.map((book, i) =>
+                <Accordion key={i} expanded={openPanel === `panel${i}`} onChange={handleChange(`panel${i}`, book, i)}>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                         <Typography className={classes.heading}>{book.title}</Typography>
                         <Typography className={classes.secondaryHeading}>{book.author_name ? book.author_name[0] : ''}</Typography>
                     </AccordionSummary>
 
-                    {bookCache[i] && expanded && <AccordionDetails>
-                        <BookContent>
-                            <BookCover>
-                                <img src={bookCache[i].cover} alt={bookCache[i].title}/>
-                            </BookCover>
-                            <BookInfo>
-                                <div className='basic'>
-                                    <h1>{bookCache[i].title} {bookCache[i].year &&`(${bookCache[i].year})`}</h1>
-                                    <h4 className={bookCache[i].author === 'Unknown author' ? 'italic' : ''}>
-                                        {bookCache[i].author}
-                                    </h4>
-                                    <p>
-                                        {bookCache[i].place &&
-                                        bookCache[i].place.map((item, i) => <span key={i}>{ (i ? ', ' : '') + item }</span> )}
-                                    </p>
-                                </div>
-
-                                <div className='editions'>
-                                    <h4>Editions:</h4>
-                                    {bookCache[i].editionName.map((item, e) =>
-                                        <li key={e}>
-                                            <a href={`https://openlibrary.org/books/${bookCache[i].editionId[e]}`} target="_blank" rel="noreferrer">{item}</a>
-                                        </li>
-                                    )}
-                                </div>
-                            </BookInfo>
-                        </BookContent>
-                    </AccordionDetails>}
+                    {cachedBooks[i] && openPanel && 
+                    <BookDetails index={i}/>}
                 </Accordion>
             )}
         </BookListContainer>

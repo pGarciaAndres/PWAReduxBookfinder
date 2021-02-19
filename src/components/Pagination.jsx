@@ -2,6 +2,9 @@ import React from 'react';
 import styled from 'styled-components';
 import IconButton from '@material-ui/core/IconButton';
 import ForwardIcon from '@material-ui/icons/Forward';
+// Redux
+import { useSelector, useDispatch } from "react-redux";
+import { decPage, incPage } from '../store/actions';
 
 const PaginationContainer = styled.div`
     margin: 20px auto 10px auto;
@@ -25,21 +28,24 @@ const PaginationContainer = styled.div`
 `;
 
 const Pagination = props => {
-    const pageCounter = props.data.start === 0 ? 1 : props.data.start/100 + 1;
-    const prevDisabled = () => {
-        return pageCounter === 1;
+    const dispatch = useDispatch();
+    const data = useSelector(state => state.data);
+    const pageCounter = useSelector(state => state.page);;
+
+    const prevPage = () => {
+        dispatch(decPage());
     }
-    const nextDisabled = () => {
-        return pageCounter === props.data.pages;
+    const nextPage = () => {
+        dispatch(incPage());
     }
 
     return (
         <PaginationContainer>
-            <IconButton disabled={prevDisabled()} className="rotate" onClick={() => props.search(pageCounter-1)}>
+            <IconButton disabled={pageCounter === 1} className="rotate" onClick={() => prevPage()}>
                 <ForwardIcon fontSize="large"/>
             </IconButton>
-            <span className="pageNumber">{`${pageCounter} / ${props.data.pages}`}</span>
-            <IconButton disabled={nextDisabled()} onClick={() => props.search(pageCounter+1)}>
+            <span className="pageNumber">{`${pageCounter} / ${data.pages}`}</span>
+            <IconButton disabled={pageCounter === data.pages} onClick={() => nextPage()}>
                 <ForwardIcon fontSize="large"/>
             </IconButton>
         </PaginationContainer>

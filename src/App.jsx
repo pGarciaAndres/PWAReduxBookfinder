@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LoadingAnimation from './components/LoadingAnimation.jsx';
 import SearchBox from './components/SearchBox.jsx';
 import BookList from './components/BookList.jsx';
@@ -7,7 +7,9 @@ import styled from 'styled-components';
 import book from './images/book.png';
 import 'semantic-ui-css/semantic.min.css';
 import './App.scss';
-
+// Redux
+import { useSelector, useDispatch } from "react-redux";
+import { setData } from './store/actions';
 // Services
 import searchService from './services/searchService';
 
@@ -42,42 +44,45 @@ const Welcome = styled.div`
 `;
 
 const App = () => {
+  const dispatch = useDispatch();
   const welcomeText = '.BOOK FINDER.';
   const [loading, setLoading] = useState(false);
-  const [searchText, setSearchText] = useState(null);
-  const [searchBy, setSearchBy] = useState(null);
-  const [data, setData] = useState({
-    docs: [],
-    pages: 0,
-  });
+  const data = useSelector(state => state.data);
+  const page = useSelector(state => state.page);
+  const searchText = useSelector(state => state.text);
+  const searchMethod = useSelector(state => state.method);
 
-  // Search Book
-  const search = async(page, text, by) => {
+  const search = async() => {
     setLoading(true);
-    const textToFind = text === undefined ? searchText : text;
-    const howToFind = by === undefined ? searchBy : by;
-    setSearchText(textToFind);
-    setSearchBy(howToFind);
-    const response = await searchService.getBooksByInput(page, textToFind, howToFind);
-    setData({
-      start: response.start,
-      docs: response.docs,
-      pages: response.numFound % 100 === 0 ? response.numFound/100 : parseInt(response.numFound/100 + 1),
-    });
-
+    const response = await searchService.getBooksByInput(page, searchText, searchMethod);
+    dispatch(
+      setData({
+        start: response.start,
+        docs: response.docs,
+        pages: response.numFound % 100 === 0 ? response.numFound/100 : parseInt(response.numFound/100 + 1),
+      })
+    );
     setLoading(false);
   }
+
+  useEffect(() => {
+    if (page) {
+      search();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
   return (
     <AppContainer>
       <SearchBox search={search}/>
-      {!loading && data.pages === 0 &&
+      {data.pages === 0 && !loading &&
         <Welcome>
           {welcomeText}
           <img src={book} alt={'BOOK FINDER'}/>
         </Welcome>}
-      {data.pages > 0 && <Pagination data={data} search={search}/>}
-      {loading ? <LoadingAnimation/> : <BookList data={data}/>}
+      { data.pages > 0 && <Pagination /> }
+      { data.pages > 0 && !loading && <BookList /> }
+      { loading && <LoadingAnimation/> }
     </AppContainer>
   );
 }
