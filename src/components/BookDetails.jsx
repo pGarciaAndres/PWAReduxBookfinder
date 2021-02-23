@@ -57,30 +57,39 @@ const BookInfo = styled.div`
 
 const BookDetails = props => {
     const cachedBooks = useSelector(state => state.cachedBooks);
+    const {
+        cover,
+        title,
+        author,
+        place,
+        year,
+        editionId,
+        editionName,
+    } =  cachedBooks[props.index];
 
     return (
             <AccordionDetails>
                 <BookContent>
                     <BookCover>
-                        <img src={cachedBooks[props.index].cover} alt={cachedBooks[props.index].title}/>
+                        <img src={cover} alt={title}/>
                     </BookCover>
                     <BookInfo>
                         <div className='basic'>
-                            <h1>{cachedBooks[props.index].title} {cachedBooks[props.index].year &&`(${cachedBooks[props.index].year})`}</h1>
-                            <h4 className={cachedBooks[props.index].author === 'Unknown author' ? 'italic' : ''}>
-                                {cachedBooks[props.index].author}
+                            <h1>{title} {year &&`(${year})`}</h1>
+                            <h4 className={author === 'Unknown author' ? 'italic' : ''}>
+                                {author}
                             </h4>
                             <p>
-                                {cachedBooks[props.index].place &&
-                                cachedBooks[props.index].place.map((item, i) => <span key={i}>{ (i ? ', ' : '') + item }</span> )}
+                                {place &&
+                                place.map((item, i) => <span key={i}>{ (i ? ', ' : '') + item }</span> )}
                             </p>
                         </div>
 
                         <div className='editions'>
                             <h4>Editions:</h4>
-                            {cachedBooks[props.index].editionName.map((item, e) =>
+                            {editionName.map((item, e) =>
                                 <li key={e}>
-                                    <a href={`https://openlibrary.org/books/${cachedBooks[props.index].editionId[e]}`} target="_blank" rel="noreferrer">{item}</a>
+                                    <a href={`https://openlibrary.org/books/${editionId[e]}`} target="_blank" rel="noreferrer">{item}</a>
                                 </li>
                             )}
                         </div>

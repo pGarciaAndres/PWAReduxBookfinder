@@ -46,7 +46,7 @@ const BookList = props => {
         books[bookIndex].editionId.map(async (ed, edIndex) => {
             const edRes = await searchService.getBookByEditionKey(ed, books, bookIndex, edIndex);
             const bookEK = edRes.data;
-            const editionTitle = bookEK.title ? bookEK.title : 'Unknown title';
+            const editionTitle = bookEK.title ?? 'Unknown title';
             const editionDate = bookEK.publish_date ? bookEK.publish_date : 'Unknown date';
             books[bookIndex].editionName[edIndex] = `${editionTitle} - ${editionDate}`;
             if (edIndex === books[bookIndex].editionId.length - 1) {
@@ -77,7 +77,7 @@ const BookList = props => {
                             editionId: book.edition_key,
                             editionName: [],
                         }
-                        let bookCacheCopy = {...cachedBooks};
+                        let bookCacheCopy = cachedBooks;
                         bookCacheCopy[index] = newBook;
                         getEditions(bookCacheCopy, index, panel);
                     });
@@ -92,7 +92,7 @@ const BookList = props => {
                     editionId: book.edition_key,
                     editionName: [],
                 }
-                let bookCacheCopy = {...cachedBooks};
+                let bookCacheCopy = cachedBooks;
                 bookCacheCopy[index] = newBook;
                 getEditions(bookCacheCopy, index, panel);
             }

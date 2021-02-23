@@ -1,9 +1,9 @@
-const cachedBooksReducer = (state = {}, action) => {
+const cachedBooksReducer = (state = [], action) => {
     switch(action.type) {
         case 'SET_CACHED_BOOKS':
             return action.payload
         case 'CLEAR_CACHE':
-            return {}
+            return []
         default:
             return state;
     }

@@ -1,14 +1,14 @@
 import { combineReducers } from "redux";
-import dataReducer from './data';
-import inputTextReducer from './inputText';
-import searchMethodReducer from './searchMethod';
-import pageReducer from './page';
-import cachedBooksReducer from './cachedBooks';
+import data from './data';
+import text from './inputText';
+import method from './searchMethod';
+import page from './page';
+import cachedBooks from './cachedBooks';
 
 export default combineReducers({
-    data: dataReducer,
-    text: inputTextReducer,
-    method: searchMethodReducer,
-    page: pageReducer,
-    cachedBooks: cachedBooksReducer,
+    data,
+    text,
+    method,
+    page,
+    cachedBooks,
 });
